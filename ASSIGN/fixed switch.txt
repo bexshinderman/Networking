@@ -202,6 +202,11 @@ switchport mode trunk
 channel-group 2 mode passive
 no shut
 end
+
+
+int range g0/1-2
+spanning-tree bpduguard enable
+
 wr
 
 Acc_Switch_2
@@ -215,6 +220,9 @@ ip address 192.168.8.5  255.255.255.240
 ip default-gateway 172.168.8.0
 
 
+int range g0/1
+spanning-tree bpduguard enable
+
 Acc_Switch_3
 int g0/1
 switchport mode access 
@@ -225,11 +233,13 @@ int vlan 99
 ip address 192.168.8.6  255.255.255.240
 ip default-gateway 192.168.8.0
 
+int range fa0/5-24
+spanning-tree portfast
 
 
-
-
-
+int range g0/1-2
+spanning-tree bpduguard enable
+vtp mode transparent
 
 
 
@@ -269,3 +279,22 @@ Switch(config-if-range)#switchport trunk encapsulation dot1q
 Switch(config-if-range)#switchport mode trunk
 Switch(config-if-range)#exit
 Switch(config)#
+
+hostname HO-R1
+no ip domain-lookup
+service password-encryption
+enable secret class
+banner motd #
+Unauthorized access is strictly prohibited. #
+line con 0
+password cisco
+login
+logging synchronous
+line vty 0 15
+password cisco
+logging synchronous
+login
+username admin password cisco
+exit
+
+username admin password cisco privilege 15
