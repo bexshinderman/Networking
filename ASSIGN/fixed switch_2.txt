@@ -34,7 +34,7 @@ int range fa0/1-24, g0/1-2
 shut
 int vlan 99
 ip address 192.168.8.2  255.255.255.240
-ip default-gateway 192.168.8.0
+ip default-gateway 172.168.8.0
 int range fa0/1-5, fa0/7-9, G0/1
 no shut
 int G0/1
@@ -161,14 +161,12 @@ assign pc to each vlan
 Acc_Switch_1
 int g0/1
 switchport mode trunk
-switchport access vlan 30
+switchport access vlan 10
 no shut
 int g0/2
 switchport mode trunk 
-switchport access vlan 10
+switchport access vlan 20
 no shut
-
-int range
 
 int vlan 99
 ip address 192.168.8.4  255.255.255.240
@@ -204,13 +202,12 @@ switchport mode trunk
 channel-group 2 mode passive
 no shut
 end
-wr
 
-int g0/2
-description connection to user pc
-switchport mode trunk
-switchport access vlan 20
-exit 
+
+int range g0/1-2
+spanning-tree bpduguard enable
+
+wr
 
 Acc_Switch_2
 int g0/1
@@ -223,6 +220,9 @@ ip address 192.168.8.5  255.255.255.240
 ip default-gateway 172.168.8.0
 
 
+int range g0/1
+spanning-tree bpduguard enable
+
 Acc_Switch_3
 int g0/1
 switchport mode access 
@@ -233,11 +233,13 @@ int vlan 99
 ip address 192.168.8.6  255.255.255.240
 ip default-gateway 192.168.8.0
 
+int range fa0/5-24
+spanning-tree portfast
 
 
-
-
-
+int range g0/1-2
+spanning-tree bpduguard enable
+vtp mode transparent
 
 
 
@@ -269,19 +271,132 @@ Switch(config)#
 int g0/1
 description Connection to PC_Sales
 switchport mode access
-switchport access vlan 30
-exit
-
-
-int g0/2
-description Connection to PC_Users (vlan 10)
-switchport mode access
-switchport access vlan 30
+switchport access vlan 10
 exit
 
 Switch(config-if)#int range fa0/7, fa0/9
 Switch(config-if-range)#switchport trunk encapsulation dot1q
 Switch(config-if-range)#switchport mode trunk
-switchport trunk allowed vlan 10,20,30,40,99e
 Switch(config-if-range)#exit
 Switch(config)#
+
+hostname HO-R2
+no ip domain-lookup
+service password-encryption
+enable secret class
+banner motd #
+Unauthorized access is strictly prohibited. #
+line con 0
+password cisco
+login
+logging synchronous
+line vty 0 15
+password cisco
+logging synchronous
+login
+username admin password cisco
+username admin privilege 15
+line vty 0 15
+login local
+ip domain-name cisco.com
+username admin password cisco
+crypto key generate rsa
+1024
+ip ssh version 2
+exit
+
+
+hostname HO-R1
+no ip domain-lookup
+service password-encryption
+enable secret class
+banner motd #
+Unauthorized access is strictly prohibited. #
+line con 0
+password cisco
+login
+logging synchronous
+line vty 0 15
+password cisco
+logging synchronous
+login
+username admin password cisco
+username admin privilege 15
+line vty 0 15
+login local
+ip domain-name cisco.com
+username admin password cisco
+crypto key generate rsa
+1024
+ip ssh version 2
+exit
+
+int s0/1/0
+description Connection to Site 1 Router 1 S
+ip address 192.168.0.1  255.255.255.252
+clock rate 128000
+no shut
+
+int G0/1
+description Connection to Head Office Router 2
+ip address 192.168.0.2  255.255.255.252
+ip ospf priority 200
+speed 1000
+duplex full
+no shut
+
+int G0/0
+description Connection to HO-Dist-S1 Switch
+standby version 2
+speed 1000
+duplex full
+no shut
+
+
+int G0/1.10
+description Sub interface connection for User vlan PCs
+encapsulation dot1Q 10
+ip address 192.168.0.4  255.255.254.0
+standby 10 ip 192.168.0.5
+standby 10 priority 150
+standby 10 preempt 
+
+int G0/1.20
+description Sub interface connection for Finance PCs
+encapsulation dot1Q 20
+ip address 192.168.2.4 255.255.254.0
+standby 20 ip 192.168.2.5
+standby 20 priority 150
+standby 20 preempt 
+
+int G0/1.30
+description Sub interface connection for Staff PCs
+encapsulation dot1Q 30
+ip address 172.16.0.34  255.255.255.240
+standby 30 ip 172.16.0.33
+ 
+
+int G0/1.40
+description Sub interface connection for Sales PCs
+encapsulation dot1Q 40
+ip address 172.16.0.50  255.255.255.240
+standby 40 ip 172.16.0.49
+
+
+int G0/1.50
+description Sub interface connection for Switch management
+encapsulation dot1Q 50
+ip address 172.16.0.66  255.255.255.240
+standby 50 ip 172.16.0.65
+
+router ospf 1
+router-id 1.1.1.1
+network 172.16.0.80 0.0.0.3 area 0
+network 172.16.0.0 0.0.0.15 area 0
+network 172.16.0.16 0.0.0.15 area 0
+network 172.16.0.32 0.0.0.15 area 0
+network 172.16.0.48 0.0.0.15 area 0
+network 172.16.0.64 0.0.0.15 area 0
+network 172.16.0.84 0.0.0.3 area 0
+
+passive-interface G0/1
