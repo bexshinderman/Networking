@@ -370,25 +370,28 @@ standby 20 priority 150
 standby 20 preempt 
 
 int G0/1.30
-description Sub interface connection for Staff PCs
+description Sub interface connection for Sales PCs
 encapsulation dot1Q 30
-ip address 172.16.0.34  255.255.255.240
-standby 30 ip 172.16.0.33
- 
+ip address 192.168.4.4 255.255.254.0
+standby 30 ip 192.168.4.5
+standby 30 preempt  
 
 int G0/1.40
 description Sub interface connection for Sales PCs
 encapsulation dot1Q 40
-ip address 172.16.0.50  255.255.255.240
-standby 40 ip 172.16.0.49
+ip address  192.168.6.10 255.255.254.0
+standby 40 ip 192.168.6.5
+standby 40 preempt  
 
+int G0/1.99
+description Sub interface connection for Management 
+encapsulation dot1Q 99
+ip address  192.168.8.10 255.255.254.0
+standby 40 ip 192.168.8.11
+standby 40 preempt  
 
-int G0/1.50
-description Sub interface connection for Switch management
-encapsulation dot1Q 50
-ip address 172.16.0.66  255.255.255.240
-standby 50 ip 172.16.0.65
-
+int g0/1
+ip add 192.168.0.1 
 router ospf 1
 router-id 1.1.1.1
 network 172.16.0.80 0.0.0.3 area 0
@@ -400,3 +403,88 @@ network 172.16.0.64 0.0.0.15 area 0
 network 172.16.0.84 0.0.0.3 area 0
 
 passive-interface G0/1
+
+
+no ip domain-lookup
+service password-encryption
+enable secret class
+banner motd #
+Unauthorized access is strictly prohibited. #
+line con 0
+password cisco
+login
+logging synchronous
+line vty 0 15
+password cisco
+logging synchronous
+login
+username admin password cisco
+username admin privilege 15
+line vty 0 15
+login local
+ip domain-name cisco.com
+username admin password cisco
+crypto key generate rsa
+1024
+ip ssh version 2
+exit
+
+int s0/1/0
+description Connection to Site 2 Router 1 
+ip address 192.168.0.2  255.255.255.252
+clock rate 128000
+no shut
+
+int G0/1
+description Connection to Head Office Router 1
+ip address 192.168.2.2  255.255.255.252
+ip ospf priority 200
+speed 1000
+duplex full
+no shut
+
+int G0/0
+description Connection to HO-Dist-S2 Switch
+standby version 2
+speed 1000
+duplex full
+no shut
+
+
+int G0/1.10
+description Sub interface connection for User vlan PCs
+encapsulation dot1Q 10
+ip address 192.168.0.5  255.255.254.0
+standby 10 ip 192.168.0.6
+standby 10 priority 150
+standby 10 preempt 
+
+int G0/1.20
+description Sub interface connection for Finance PCs
+encapsulation dot1Q 20
+ip address 192.168.2.5 255.255.254.0
+standby 20 ip 192.168.2.6
+standby 20 priority 150
+standby 20 preempt 
+
+int G0/1.30
+description Sub interface connection for Sales PCs
+encapsulation dot1Q 30
+ip address 192.168.4.5 255.255.254.0
+standby 30 ip 192.168.4.6
+standby 30 preempt
+ 
+
+int G0/1.40
+description Sub interface connection for Sales PCs
+encapsulation dot1Q 40
+ip address  192.168.6.11 255.255.254.0
+standby 40 ip 192.168.6.6
+standby 40 preempt
+
+int G0/1.99
+description Sub interface connection for Management 
+encapsulation dot1Q 99
+ip address  192.168.8.11 255.255.254.0
+standby 99 ip 192.168.8.12
+standby 99 preempt
